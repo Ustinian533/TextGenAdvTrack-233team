@@ -1,16 +1,45 @@
-import pandas as pd
+import csv
+import json
+import hashlib
 
-file_csv = '/opt/AI-text-test/UCAS/UCAS_AISAD_TEXT-test2_withlabel.csv'
-output_path = '/opt/AI-text-test/UCAS/UCAS_AISAD_TEXT-test2_onlylabel.csv'
+def get_id(input_string):
+    hash_object = hashlib.sha256(input_string.encode())
+    hex_digest = hash_object.hexdigest()
+    int_hash = int(hex_digest, 16)
+    long_long_hash = (int_hash & ((1 << 63) - 1))
+    return long_long_hash
 
-df_csv = pd.read_csv(file_csv)
-ground_truth = df_csv['label'].values
-prompts = df_csv['prompt'].values
-texts = df_csv['text'].values
-print(f"Ground truth labels: {len(ground_truth)}")
-print(f"Prompts: {len(prompts)}")
-print(f"Texts: {len(texts)}")
+def save_jsonl(out,save_path):
+    with open(save_path, mode='w', encoding='utf-8') as jsonl_file:
+        for item in out:
+            jsonl_file.write(json.dumps(item,ensure_ascii=False)+'\n')
 
-labels = df_csv['label']
+file_path = "/opt/AI-text-Dataset-copy/UCAS/UCAS_AISAD_TEXT-test2.csv"  # 替换成你的CSV文件路径
+save_path = "/opt/AI-text-Dataset-copy/UCAS/UCAS_AISAD_TEXT-test2.jsonl"  # 替换成你想要保存的JSONL文件路径
 
-labels.to_csv(output_path, index=False)
+
+data = []
+with open(file_path, newline='', encoding='utf-8') as csvfile:
+    reader = csv.DictReader(csvfile)
+    for row in reader:
+
+        now_row = {}
+        # print(row.keys())
+        for key in row:
+            if 'prompt' in key:
+                now_row['prompt'] = row[key]
+            elif 'text' in key:
+                now_row['text'] = row[key]
+            elif 'label' in key:
+                now_row['label'] = int(row[key])
+            else:
+                raise ValueError(f"Unexpected key in CSV: {key}")
+        # if now_row['label'] == 0:
+        #     now_row['src'] = 'llm'
+        # elif now_row['label'] == 1:
+        #     now_row['src'] = 'human'
+        
+        now_row['id'] = get_id(now_row['text'])
+        data.append(now_row)
+
+save_jsonl(data, save_path)
