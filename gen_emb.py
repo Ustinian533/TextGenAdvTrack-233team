@@ -135,6 +135,8 @@ def test(opt):
     if fabric.global_rank == 0:
         emb_dict={'embeddings':train_embeddings,'labels':train_labels,'ids':train_ids,'classes':classes}
         #save emb_dict to pt
+        if os.path.exists(opt.savedir) is False:
+            Path(opt.savedir).mkdir(parents=True, exist_ok=True)
         torch.save(emb_dict, f"{opt.savedir}/{opt.name}.pt")
         print(f"Save emb_dict to {opt.savedir}/{opt.name}.pt")
         
@@ -148,7 +150,7 @@ if __name__ == "__main__":
 
     parser.add_argument("--path", type=str, default="/opt/AI-text-test/UCAS/30shot/train_3.jsonl", help="Path to the dataset")
     parser.add_argument("--database_name", type=str, default="Deepfake")
-    parser.add_argument("--model_path", type=str, default="ckpt/ucas_model2.pth")
+    parser.add_argument("--model_path", type=str, default="/opt/Detect-Anything-Text/ckpt/ucas_model2.pth")
     parser.add_argument('--model_name', type=str, default="FacebookAI/roberta-large")
     parser.add_argument('--lora', type=bool, default=True)
     parser.add_argument(
